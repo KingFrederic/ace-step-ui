@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, User, Sparkles } from 'lucide-react';
+import { User, Sparkles } from 'lucide-react';
 import { useI18n } from '../context/I18nContext';
 
 interface UsernameModalProps {
@@ -25,16 +25,17 @@ export const UsernameModal: React.FC<UsernameModalProps> = ({ isOpen, onSubmit }
       return;
     }
 
-    if (!/^[a-zA-Z0-9_-]+$/.test(trimmed)) {
-      setError(t('usernameInvalidChars'));
-      return;
-    }
-
     setIsLoading(true);
     try {
       await onSubmit(trimmed);
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('failedToSetUsername'));
+      const message = err instanceof Error ? err.message : '';
+      const isBackendDown = message.startsWith('404:') || message.startsWith('0:') || message.includes('Failed to fetch') || message.includes('NetworkError');
+      if (isBackendDown) {
+        setError('Cannot reach the backend server. Make sure it is running (or set VITE_API_URL to your deployed backend).');
+      } else {
+        setError(message.replace(/^\d+:\s*/, '') || t('failedToSetUsername'));
+      }
     } finally {
       setIsLoading(false);
     }
@@ -80,7 +81,7 @@ export const UsernameModal: React.FC<UsernameModalProps> = ({ isOpen, onSubmit }
                   type="text"
                   id="username"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_-]/g, ''))}
                   placeholder={t('enterYourName')}
                   className="w-full pl-10 pr-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all"
                   autoFocus
