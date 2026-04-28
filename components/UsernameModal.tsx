@@ -30,7 +30,12 @@ export const UsernameModal: React.FC<UsernameModalProps> = ({ isOpen, onSubmit }
       await onSubmit(trimmed);
     } catch (err) {
       const message = err instanceof Error ? err.message : '';
-      setError(message.replace(/^\d+:\s*/, '') || t('failedToSetUsername'));
+      const isBackendDown = message.startsWith('404:') || message.startsWith('0:') || message.includes('Failed to fetch') || message.includes('NetworkError');
+      if (isBackendDown) {
+        setError('Cannot reach the backend server. Make sure it is running (or set VITE_API_URL to your deployed backend).');
+      } else {
+        setError(message.replace(/^\d+:\s*/, '') || t('failedToSetUsername'));
+      }
     } finally {
       setIsLoading(false);
     }

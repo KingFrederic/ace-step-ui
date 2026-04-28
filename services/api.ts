@@ -1,5 +1,7 @@
-// Use relative URLs so Vite proxy handles them (enables LAN access)
-const API_BASE = '';
+// In development the Vite proxy forwards /api to localhost:3001.
+// In production set VITE_API_URL to point at the deployed backend, e.g.
+//   VITE_API_URL=https://ace-step-ui-api.railway.app
+const API_BASE = (import.meta.env.VITE_API_URL as string) || '';
 
 // Resolve audio URL based on storage type
 export function getAudioUrl(audioUrl: string | undefined | null, songId?: string): string | undefined {
@@ -41,7 +43,6 @@ async function api<T>(endpoint: string, options: ApiOptions = {}): Promise<T> {
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: 'Request failed' }));
     const errorMessage = error.error || error.message || 'Request failed';
-    // Include status code in error for proper handling
     throw new Error(`${response.status}: ${errorMessage}`);
   }
 
